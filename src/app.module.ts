@@ -5,6 +5,8 @@ import { validateEnv } from './utils/validators/env-validator';
 import { EnvironmentVariables } from './utils/env.dto';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { RmqModule } from './rmq/rmq.module';
+import { MailModule } from './mail/mail.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { RmqModule } from './rmq/rmq.module';
     }),
     HealthCheckModule,
     RmqModule,
+    MailModule,
+    NotificationsModule,
   ],
   controllers: [],
   providers: [],
