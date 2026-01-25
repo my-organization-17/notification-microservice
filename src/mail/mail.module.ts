@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 
 import { MailService } from './mail.service';
+import { TemplateService } from './template.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { MailService } from './mail.service';
       inject: [ConfigService],
     }),
   ],
-  providers: [MailService],
+  providers: [MailService, TemplateService],
   exports: [MailService],
 })
 export class MailModule {}

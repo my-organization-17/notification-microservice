@@ -2,17 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 
 import type { EmailRequest } from './email.request.interface';
+import { TemplateService } from './template.service';
 
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly templateService: TemplateService,
+  ) {}
 
   async sendMail(emailRequest: EmailRequest) {
+    const htmlContent = emailRequest.template
+      ? await this.templateService.getTemplate(emailRequest.template, emailRequest.context || {})
+      : emailRequest.html;
+
+    if (!htmlContent) {
+      throw new Error('Either html content or a template must be provided.');
+    }
     await this.mailerService.sendMail({
       to: emailRequest.to,
       subject: emailRequest.subject,
-      html: emailRequest.html,
-      template: emailRequest.template,
+      html: htmlContent,
       context: emailRequest.context,
     });
   }
