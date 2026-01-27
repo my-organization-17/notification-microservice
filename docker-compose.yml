@@ -15,6 +15,7 @@ services:
 
   notification-app:
     container_name: notification-app
+    image: notification-microservice:latest
     build:
       context: .
       dockerfile: Dockerfile
