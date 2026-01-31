@@ -21,6 +21,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./.env.docker
+    expose:
+      - '9102'
     depends_on:
       - rabbitmq
     networks:

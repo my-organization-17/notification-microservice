@@ -9,9 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const logger = new Logger('Main');
+
   const configService = app.get(ConfigService);
   const url = configService.getOrThrow<string>('RABBITMQ_URL');
   const queue = configService.getOrThrow<string>('RABBITMQ_QUEUE');
+  const PORT = configService.getOrThrow<number>('HTTP_PORT');
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
@@ -28,7 +30,7 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  await app.init();
+  await app.listen(PORT);
   logger.log('Notification microservice is running on ' + url);
 }
 void bootstrap();

@@ -2,6 +2,10 @@ import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsInt, IsNotEmpty, IsNumber, IsString, IsUrl } from 'class-validator';
 
 export class EnvironmentVariables {
+  @IsNumber()
+  @IsInt()
+  readonly HTTP_PORT: number;
+
   @IsUrl({ protocols: ['amqp', 'amqps'], require_tld: false }, { message: 'RABBITMQ_URL must be a valid AMQP URL' })
   @IsNotEmpty()
   readonly RABBITMQ_URL: string;

@@ -7,6 +7,7 @@ import { HealthCheckModule } from './health-check/health-check.module';
 import { RmqModule } from './rmq/rmq.module';
 import { MailModule } from './mail/mail.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MetricsModule } from './supervision/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     RmqModule,
     MailModule,
     NotificationsModule,
+    MetricsModule,
   ],
   controllers: [],
   providers: [],
