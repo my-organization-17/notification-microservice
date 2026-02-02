@@ -2,6 +2,10 @@ import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsInt, IsNotEmpty, IsNumber, IsString, IsUrl } from 'class-validator';
 
 export class EnvironmentVariables {
+  @IsString()
+  @IsNotEmpty()
+  readonly NODE_ENV: string;
+
   @IsNumber()
   @IsInt()
   readonly HTTP_PORT: number;
