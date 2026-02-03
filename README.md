@@ -1,98 +1,185 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Notification Microservice
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based microservice responsible for handling email notifications via RabbitMQ message queue. Part of the CoffeeDoor microservices architecture.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- **Email Notifications**: Send transactional emails with support for HTML content and Handlebars templates
+- **RabbitMQ Integration**: Event-driven architecture using RabbitMQ for message consumption
+- **Template Engine**: Handlebars-based email templating with caching for performance
+- **Observability**:
+  - OpenTelemetry tracing with Jaeger integration
+  - Prometheus metrics for monitoring
+- **Health Checks**: RabbitMQ-based health check endpoint
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture
 
-## Project setup
-
-```bash
-$ npm install
+```
+┌─────────────────┐     RabbitMQ      ┌──────────────────────────┐
+│  Other Services │ ───────────────── │ Notification Microservice│
+└─────────────────┘   Event Pattern   └──────────────────────────┘
+                                               │
+                                               ▼
+                                      ┌─────────────────┐
+                                      │   SMTP Server   │
+                                      └─────────────────┘
 ```
 
-## Compile and run the project
+## Tech Stack
 
-```bash
-# development
-$ npm run start
+- **Framework**: NestJS 11
+- **Message Queue**: RabbitMQ (AMQP)
+- **Email**: Nodemailer with @nestjs-modules/mailer
+- **Templates**: Handlebars
+- **Tracing**: OpenTelemetry + Jaeger
+- **Metrics**: Prometheus (prom-client)
+- **Runtime**: Node.js 24
 
-# watch mode
-$ npm run start:dev
+## Project Structure
 
-# production mode
-$ npm run start:prod
+```
+src/
+├── main.ts                     # Application entry point
+├── app.module.ts               # Root module
+├── health-check/               # Health check endpoint
+├── mail/
+│   ├── mail.module.ts          # Mail module configuration
+│   ├── mail.service.ts         # Email sending logic
+│   ├── template.service.ts     # Handlebars template rendering
+│   ├── email.request.interface.ts
+│   └── templates/              # Email templates (.hbs files)
+│       ├── verify-email.hbs
+│       └── reset-password.hbs
+├── notifications/
+│   ├── notifications.module.ts
+│   ├── notifications.controller.ts  # RabbitMQ event handlers
+│   └── notifications.service.ts
+├── rmq/
+│   ├── rmq.module.ts
+│   └── rmq.service.ts          # RabbitMQ ack/nack handling
+├── supervision/
+│   ├── metrics/                # Prometheus metrics
+│   └── tracing/                # OpenTelemetry configuration
+└── utils/
+    ├── env.dto.ts              # Environment validation
+    ├── errors/                 # Error handling utilities
+    └── validators/             # Environment validators
 ```
 
-## Run tests
+## Event Patterns
 
-```bash
-# unit tests
-$ npm run test
+| Pattern | Description |
+|---------|-------------|
+| `notification.email.send` | Send an email notification |
+| `health.check` | Health check request |
 
-# e2e tests
-$ npm run test:e2e
+## Email Request Interface
 
-# test coverage
-$ npm run test:cov
+```typescript
+interface EmailRequest {
+  to: string;           // Recipient email address
+  subject: string;      // Email subject
+  html?: string;        // Raw HTML content
+  template?: string;    // Template name (without .hbs extension)
+  context?: Record<string, any>;  // Template variables
+}
 ```
 
-## Deployment
+## Available Templates
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **verify-email**: Email verification template
+  - Context: `{ name: string, verificationLink: string }`
+- **reset-password**: Password reset template
+  - Context: `{ name: string, resetLink: string }`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development`, `production` |
+| `HTTP_PORT` | HTTP server port | `3000` |
+| `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://user:pass@localhost:5672` |
+| `RABBITMQ_QUEUE` | Queue name to consume | `notification_queue` |
+| `MAIL_HOST` | SMTP server host | `smtp.gmail.com` |
+| `MAIL_PORT` | SMTP server port | `587` |
+| `MAIL_USERNAME` | SMTP username | `user@example.com` |
+| `MAIL_PASSWORD` | SMTP password | `password` |
+| `MAIL_FROM` | Default sender email | `noreply@example.com` |
+| `MAIL_FROM_NAME` | Default sender name | `CoffeeDoor` |
+| `MAIL_SECURE` | Use TLS | `true`, `false` |
+
+## Installation
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Running the Service
 
-## Resources
+```bash
+# Development mode
+npm run start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# Production mode
+npm run build
+npm run start:prod
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Debug mode
+npm run start:debug
+```
 
-## Support
+## Docker
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+# Build the image
+docker build -t notification-microservice .
 
-## Stay in touch
+# Run the container
+docker run -p 3000:3000 --env-file .env.local notification-microservice
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Testing
+
+```bash
+# Unit tests
+npm run test
+
+# Watch mode
+npm run test:watch
+
+# Coverage
+npm run test:cov
+
+# E2E tests
+npm run test:e2e
+```
+
+## Observability
+
+### Metrics
+
+Prometheus metrics are exposed at `/metrics` endpoint. Available metrics include:
+- `rmq_events_success_total` - Counter for successfully processed RabbitMQ events
+- `rmq_events_failed_total` - Counter for failed RabbitMQ events
+- Default Node.js metrics (memory, CPU, event loop, etc.)
+
+### Tracing
+
+OpenTelemetry traces are exported to Jaeger via gRPC on `http://jaeger:4317`. Instrumentation includes:
+- HTTP requests
+- NestJS core operations
+- gRPC calls
+
+## Linting & Formatting
+
+```bash
+# Lint and fix
+npm run lint
+
+# Format code
+npm run format
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED - Private
