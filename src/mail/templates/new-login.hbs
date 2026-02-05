@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Login Notification</title>
+</head>
+<body>
+  <h2>New Login Detected</h2>
+  <p>Hello {{name}},</p>
+  <p>We noticed a new login to your account:</p>
+
+  <table>
+    <tr><td><strong>Device:</strong></td><td>{{device}}</td></tr>
+    <tr><td><strong>IP Address:</strong></td><td>{{ipAddress}}</td></tr>
+    <tr><td><strong>Location:</strong></td><td>{{location}}</td></tr>
+    <tr><td><strong>Time:</strong></td><td>{{timestamp}}</td></tr>
+  </table>
+
+  <p>If this was you, no action is needed.</p>
+  <p><strong>If this wasn't you:</strong></p>
+  <ul>
+    <li>Change your password immediately</li>
+    <li>Sign out of all devices</li>
+  </ul>
+
+  <p>Best regards,<br/>The Team</p>  
+</body>
+</html>
